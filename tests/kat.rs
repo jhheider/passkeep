@@ -32,6 +32,19 @@ struct RegVector {
     expected_fmt: String,
 }
 
+/// A real registration whose attestation format is out of this crate's scope:
+/// passkeep must reject it cleanly (no panic) after parsing the real authData
+/// and COSE key. Used for the Apple and Android device captures.
+#[derive(Deserialize)]
+struct RegRejectVector {
+    rp_id: String,
+    origin: String,
+    challenge_b64url: String,
+    client_data_json_b64url: String,
+    attestation_object_b64url: String,
+    expected_unsupported_fmt: String,
+}
+
 #[derive(Deserialize)]
 struct AuthVector {
     rp_id: String,
@@ -54,6 +67,66 @@ fn registration_vector() -> RegVector {
 fn assertion_vector() -> AuthVector {
     serde_json::from_str(include_str!("vectors/assertion_es256.json"))
         .expect("assertion fixture parses")
+}
+
+/// Drive a positive registration vector through passkeep and assert its result.
+fn assert_registers(v: &RegVector, expect_uv: bool) {
+    let credential = RelyingParty::new(&v.rp_id, &v.origin)
+        .verify_registration(&RegistrationVerification {
+            client_data_json: &b64(&v.client_data_json_b64url),
+            attestation_object: &b64(&v.attestation_object_b64url),
+            expected_challenge: &b64(&v.challenge_b64url),
+            require_user_verification: v.require_user_verification,
+        })
+        .expect("real registration vector must verify");
+    assert_eq!(
+        credential.credential_id,
+        b64(&v.expected_credential_id_b64url)
+    );
+    assert_eq!(credential.attestation_format, v.expected_fmt);
+    assert_eq!(credential.user_verified, expect_uv);
+}
+
+#[test]
+fn kat_registration_packed_self_es256() {
+    // Real packed self attestation (SimpleWebAuthn capture): passkeep verifies
+    // the attestation signature with the credential's own key.
+    let v: RegVector = serde_json::from_str(include_str!("vectors/registration_packed_es256.json"))
+        .expect("packed fixture parses");
+    assert_registers(&v, true);
+}
+
+#[test]
+fn kat_registration_apple_is_rejected_cleanly() {
+    // Real Apple platform authenticator output: fmt "apple" is out of scope, so
+    // passkeep parses the real authData and COSE key without panicking, then
+    // returns a clean UnsupportedAttestation rather than accepting or crashing.
+    assert_unsupported(include_str!("vectors/registration_apple_unsupported.json"));
+}
+
+#[test]
+fn kat_registration_android_key_is_rejected_cleanly() {
+    // Real Android Keystore output: fmt "android-key" is out of scope.
+    assert_unsupported(include_str!(
+        "vectors/registration_android_key_unsupported.json"
+    ));
+}
+
+fn assert_unsupported(json: &str) {
+    let v: RegRejectVector = serde_json::from_str(json).expect("reject fixture parses");
+    let err = RelyingParty::new(&v.rp_id, &v.origin)
+        .verify_registration(&RegistrationVerification {
+            client_data_json: &b64(&v.client_data_json_b64url),
+            attestation_object: &b64(&v.attestation_object_b64url),
+            expected_challenge: &b64(&v.challenge_b64url),
+            require_user_verification: false,
+        })
+        .unwrap_err();
+    assert!(
+        matches!(err, Error::UnsupportedAttestation(fmt) if fmt == v.expected_unsupported_fmt),
+        "expected UnsupportedAttestation({}), got a different error",
+        v.expected_unsupported_fmt
+    );
 }
 
 #[test]

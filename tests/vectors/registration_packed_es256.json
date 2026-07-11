@@ -1,0 +1,12 @@
+{
+  "description": "packed self attestation, ES256 (real authenticator capture)",
+  "source": "MasterKale/SimpleWebAuthn packages/server/src/registration/verifyRegistrationResponse.test.ts (attestationPacked, 'should verify Packed (EC2) attestation')",
+  "rp_id": "dev.dontneeda.pw",
+  "origin": "https://dev.dontneeda.pw",
+  "require_user_verification": false,
+  "challenge_b64url": "czZQSWJCblBQbnJHTlNCeE5kdERyVDdVclZZSks5SE0",
+  "client_data_json_b64url": "eyJjaGFsbGVuZ2UiOiJjelpRU1dKQ2JsQlFibkpIVGxOQ2VFNWtkRVJ5VkRkVmNsWlpTa3M1U0UwIiwib3JpZ2luIjoiaHR0cHM6Ly9kZXYuZG9udG5lZWRhLnB3IiwidHlwZSI6IndlYmF1dGhuLmNyZWF0ZSJ9",
+  "attestation_object_b64url": "o2NmbXRmcGFja2VkZ2F0dFN0bXSiY2FsZyZjc2lnWEcwRQIhANvrPZMUFrl_rvlgRqz6lCPlF6B4y885FYUCCrhrzAYXAiAb4dQKXbP3IimsTTadkwXQlrRVdxzlbmPXt847-Oh6r2hhdXRoRGF0YVjhPdxHEOnAiLIp26idVjIguzn3Ipr_RlsKZWsa-5qK-KBFXsOO-a3OAAI1vMYKZIsLJfHwVQMAXQGE4WNXLCDWOCa2x8hpqk5dZy_xdc4wBd4UgCJ4M_JAHI7oJgDDVb8WUcKqRB_mzRxwCL9vdTl-ZKPXg3_-Zrt1Adgb7EnK9ivqaTOKMDqRrKsIObWYJaqpsSJtUKUBAgMmIAEhWCBKMVVaivqCBpqqAxMjuCo5jMeUdh3jDOC0EF4fLBNNTyJYILc7rqDDeX1pwCLrl3ZX7IThrtZNwKQVLQyfHiorqP-n",
+  "expected_credential_id_b64url": "AYThY1csINY4JrbHyGmqTl1nL_F1zjAF3hSAIngz8kAcjugmAMNVvxZRwqpEH-bNHHAIv291OX5ko9eDf_5mu3UB2BvsScr2K-ppM4owOpGsqwg5tZglqqmxIm1Q",
+  "expected_fmt": "packed"
+}

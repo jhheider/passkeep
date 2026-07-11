@@ -9,9 +9,13 @@ https://github.com/jhheider/briefs/blob/main/ideas/pure-rust-webauthn-rp.md
 
 ## The one rule that defines this crate
 
-**No C crypto in the dependency tree.** ES256 verification goes through `ring`
-(default backend, prebuilt asm, no cmake/NASM) or RustCrypto `p256` (the
-`rustcrypto` feature, fully pure Rust). After any dependency change, confirm:
+**No OpenSSL, no aws-lc, no external C build system (cmake/NASM), and a
+fully-pure-Rust option.** ES256 verification goes through `ring` by default
+(its own vendored crypto: pregenerated asm plus a little C compiled by `cc`, but
+no OpenSSL/aws-lc/cmake/NASM, and it cross-compiles clean to musl/aarch64) or
+RustCrypto `p256` (the `rustcrypto` feature, genuinely zero C). Do NOT claim
+"no C in the tree": the default ring backend does compile a little C. The honest
+and enforced invariant is the one above. After any dependency change, confirm:
 
 ```
 cargo tree -i openssl-sys        # must be empty

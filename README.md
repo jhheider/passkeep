@@ -1,7 +1,8 @@
 # passkeep
 
-A small, pure-Rust WebAuthn **relying party**: verify passkey registration and
-assertion ceremonies with **no C crypto in the dependency tree**.
+A small WebAuthn **relying party**: verify passkey registration and assertion
+ceremonies with **no OpenSSL and no aws-lc**, and an optional fully-pure-Rust
+build with no C at all.
 
 It does exactly the server side of passkeys and nothing else. No database, no
 HTTP framework, no session or user model: you own transport and storage, and
@@ -11,17 +12,27 @@ counter to persist (assertion).
 
 ## Why it exists
 
-The two established options both pull a C library into your build:
+It comes out of a small self-hosted Leptos/axum app that needs passkey auth for
+one or two accounts and wants a minimal, dependency-light server-side verifier.
+The RP side is not much crypto: for the common case (platform authenticators,
+ES256) it is CBOR and byte parsing wrapped around a single ECDSA P-256 signature
+verification. The hard part is spec compliance and getting the ceremony checks
+right, not the math. passkeep does only that, synchronously, with a small
+dependency set.
 
-- `webauthn-rs`, the mature choice, depends on OpenSSL.
-- `passkey`, the pure-Rust-adjacent choice, uses aws-lc-rs (AWS-LC, C/C++).
+How it sits next to the established crates:
 
-For a small self-hosted Rust app, a C toolchain is friction the relying-party
-side does not actually need. The RP is not much crypto: for the common case
-(platform authenticators, ES256) it is CBOR and byte parsing wrapped around a
-single ECDSA P-256 signature verification, which both `ring` and RustCrypto's
-`p256` do without a C build. The hard part is spec compliance and getting the
-ceremony checks right, not the math. passkeep fills that gap.
+- `webauthn-rs` is the mature, full-featured choice. Its current 0.5 release
+  links **OpenSSL** (the 0.6 line in progress is migrating to RustCrypto). It is
+  a much larger surface than a one-or-two-account app needs.
+- `passkey` (1Password's passkey-rs) is already pure-Rust (RustCrypto `p256`),
+  but it is a full client-plus-authenticator toolkit: async, pulling
+  `reqwest`, `tokio`, `coset`, and `public-suffix`. passkeep is a synchronous,
+  relying-party-only verifier with a handful of dependencies.
+
+So the niche is narrow on purpose: RP-only, small and synchronous, and free of
+OpenSSL, aws-lc, and any external C build system (cmake, NASM), with a
+fully-pure-Rust backend available for those who want zero C anywhere.
 
 ## Scope
 
@@ -52,9 +63,10 @@ Deliberately out of scope (see the brief):
 
 Chosen at build time behind a feature:
 
-- `ring` (default): ring's prebuilt asm, no cmake or NASM, cross-compiles clean
-  to musl and aarch64.
-- `rustcrypto`: fully pure Rust (`p256` + `sha2`) for zero C anywhere.
+- `ring` (default): ES256 via ring's own vendored, self-contained crypto
+  (pregenerated assembly plus a little C compiled by `cc`). No OpenSSL, no
+  aws-lc, no cmake or NASM, and it cross-compiles clean to musl and aarch64.
+- `rustcrypto`: `p256` + `sha2`, fully pure Rust for zero C anywhere.
 
 ```toml
 # default: ring
@@ -64,7 +76,8 @@ passkeep = "0.1"
 passkeep = { version = "0.1", default-features = false, features = ["rustcrypto"] }
 ```
 
-Both are verified free of `openssl-sys`, `aws-lc-sys`, and `cmake` in CI.
+Both backends are verified free of `openssl-sys`, `aws-lc-sys`, and `cmake` in
+CI, and the `rustcrypto` backend is verified free of `ring` as well.
 
 ## Usage
 
@@ -99,21 +112,29 @@ let outcome = rp.verify_assertion(&AssertionVerification {
     require_user_verification: true,
 })?;
 // Persist outcome.new_sign_count back onto the credential.
-# Ok::<(), passkeep::Error>(())
 ```
 
-An axum wiring example (the beadventory shape: challenge in a signed cookie or
-server-side store, credentials in Postgres) is a planned addition.
+`examples/axum_rp.rs` shows the full round trip wired into an axum server, with
+the challenge held in an in-memory store keyed by a cookie and the credential
+kept in memory (swap both for your session store and database).
+
+You own everything around the ceremony. In particular: bind each issued
+challenge to its pending ceremony, **invalidate it after a single
+verification** (and ideally expire it), persist the credential id + public key +
+sign count, at assertion time look the credential up by its id and verify that
+credential belongs to the user you are authenticating, and reject a registration
+whose credential id you already store.
 
 ## Status
 
-Pre-1.0 and **not yet published**. It is tested three ways: self-consistency
-roundtrips, parser rejection-path tests, and known-answer tests against real
-published WebAuthn vectors (`tests/vectors/`, ~91% line coverage), all run under
-both crypto backends. Before the first crates.io release it still needs
-Apple/Android-captured vectors on top of the public ones and a pass through the
-security-review skill over the hand-rolled parsing and verification. Do not trust
-it in production yet.
+Pre-1.0 and **not yet published to crates.io** (deliberately proving it out
+internally first). It is tested four ways, all under both crypto backends:
+self-consistency roundtrips, parser rejection-path tests, known-answer tests
+against real published WebAuthn vectors including real Apple and Android device
+captures (`tests/vectors/`, ~91% line coverage), and a documented pass through
+an adversarial security review of the hand-rolled parsing and verification
+(no exploitable issues found). Treat it as pre-1.0 regardless: review it
+yourself before trusting it in production.
 
 ## License
 

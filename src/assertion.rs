@@ -12,12 +12,19 @@ use crate::error::{Error, Result};
 /// `client_data_json`, `authenticator_data`, and `signature` are raw decoded
 /// bytes, and `expected_challenge` is the raw challenge you issued.
 pub struct AssertionVerification<'a> {
+    /// Raw clientDataJSON bytes from the response.
     pub client_data_json: &'a [u8],
+    /// Raw authenticatorData bytes from the response.
     pub authenticator_data: &'a [u8],
+    /// Raw ASN.1 DER ECDSA signature bytes from the response.
     pub signature: &'a [u8],
+    /// The raw challenge you issued for this ceremony.
     pub expected_challenge: &'a [u8],
+    /// The stored public key, looked up by the returned credential id.
     pub credential_public_key: &'a CoseEs256Key,
+    /// The sign count currently stored for this credential (clone detection).
     pub previous_sign_count: u32,
+    /// Require the User Verified (UV) flag (e.g. a PIN or biometric was used).
     pub require_user_verification: bool,
 }
 
@@ -25,8 +32,11 @@ pub struct AssertionVerification<'a> {
 /// stored credential (that is the whole point of the counter check).
 #[derive(Clone, Debug)]
 pub struct AssertionOutcome {
+    /// The new signature counter to persist onto the stored credential.
     pub new_sign_count: u32,
+    /// Whether the User Verified (UV) flag was set on this assertion.
     pub user_verified: bool,
+    /// The Backup State (BS) flag: whether the credential is currently backed up.
     pub backup_state: bool,
 }
 

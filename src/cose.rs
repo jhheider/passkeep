@@ -10,7 +10,9 @@ use ciborium::value::Value;
 /// hand this back at assertion time.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CoseEs256Key {
+    /// The x coordinate of the public point (32 bytes, big-endian).
     pub x: [u8; 32],
+    /// The y coordinate of the public point (32 bytes, big-endian).
     pub y: [u8; 32],
 }
 

@@ -13,9 +13,13 @@ use crate::error::{Error, Result};
 /// `client_data_json` and `attestation_object` are the raw decoded bytes (not
 /// base64url), and `expected_challenge` is the raw challenge you issued.
 pub struct RegistrationVerification<'a> {
+    /// Raw clientDataJSON bytes from the response.
     pub client_data_json: &'a [u8],
+    /// Raw attestationObject bytes from the response.
     pub attestation_object: &'a [u8],
+    /// The raw challenge you issued for this ceremony.
     pub expected_challenge: &'a [u8],
+    /// Require the User Verified (UV) flag (e.g. a PIN or biometric was used).
     pub require_user_verification: bool,
 }
 
@@ -23,13 +27,21 @@ pub struct RegistrationVerification<'a> {
 /// credential id, public key, and sign_count; the rest is useful metadata.
 #[derive(Clone, Debug)]
 pub struct RegisteredCredential {
+    /// The credential id, used to look this credential up at assertion time.
     pub credential_id: Vec<u8>,
+    /// The ES256 public key to verify future assertions against.
     pub public_key: CoseEs256Key,
+    /// The initial signature counter.
     pub sign_count: u32,
+    /// The authenticator's AAGUID (all zeros for many platform authenticators).
     pub aaguid: [u8; 16],
+    /// Whether the User Verified (UV) flag was set at registration.
     pub user_verified: bool,
+    /// The Backup Eligible (BE) flag: whether the credential can be synced.
     pub backup_eligible: bool,
+    /// The Backup State (BS) flag: whether the credential is currently backed up.
     pub backup_state: bool,
+    /// The attestation format string (`none` or `packed`).
     pub attestation_format: String,
 }
 
@@ -65,6 +77,11 @@ pub(crate) fn verify(
 
     attestation::verify_attestation(&att, &cred, v.client_data_json)?;
 
+    // Note: for attestation `none` the credential point is not verified on-curve
+    // here (no signature runs at registration). This is safe: the stored key is
+    // only ever used for signature verification, never ECDH, and both crypto
+    // backends reject an off-curve or otherwise invalid point at assertion time,
+    // so a bad key simply can never produce a passing assertion.
     Ok(RegisteredCredential {
         credential_id: cred.credential_id,
         public_key: cred.public_key,

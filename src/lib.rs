@@ -1,11 +1,17 @@
-//! passkeep: a small, pure-Rust WebAuthn relying party.
+//! passkeep: a small WebAuthn relying party.
 //!
 //! It does exactly the server side of passkeys and nothing else: verify a
 //! registration ceremony, verify an assertion ceremony, and tell you what to
-//! store. No C crypto in the dependency tree (ring's prebuilt asm by default, or
-//! fully-pure-Rust p256 via the `rustcrypto` feature), no database, no HTTP
-//! framework, no sessions or user model. You own transport and storage; this
-//! crate owns the ceremony checks and the ES256 signature verification.
+//! store. No OpenSSL and no aws-lc (ES256 runs on ring's vendored crypto by
+//! default: pregenerated asm plus a little C compiled by `cc`, no cmake or NASM;
+//! or fully-pure-Rust `p256` via the `rustcrypto` feature). No database, no HTTP
+//! framework, no sessions or user model.
+//!
+//! You own transport and storage; this crate owns the ceremony checks and the
+//! ES256 signature verification. In particular, you must persist the credential
+//! (id, public key, sign count), track each challenge as single-use (see
+//! [`Challenge`]), and at assertion time look the credential up by its id and
+//! confirm it belongs to the user being authenticated.
 //!
 //! Scope: ES256 (the algorithm Apple and Android platform authenticators emit),
 //! attestation `none` and `packed` self attestation. See the README for what is
@@ -33,8 +39,10 @@
 //!     Ok(credential) => { /* store credential.credential_id, public_key, sign_count */ }
 //!     Err(e) => eprintln!("registration rejected: {e}"),
 //! }
+//! // verify_assertion is symmetric; see the README for the full round trip.
 //! ```
 #![forbid(unsafe_code)]
+#![warn(missing_docs)]
 
 mod assertion;
 mod attestation;
@@ -64,6 +72,8 @@ pub struct RelyingParty {
 }
 
 impl RelyingParty {
+    /// Configure a relying party from its `rp_id` (the credential's scope) and
+    /// its exact `origin` (scheme and host, e.g. `https://example.com`).
     pub fn new(rp_id: impl Into<String>, origin: impl Into<String>) -> Self {
         Self {
             rp_id: rp_id.into(),
@@ -71,10 +81,12 @@ impl RelyingParty {
         }
     }
 
+    /// The configured rp_id.
     pub fn rp_id(&self) -> &str {
         &self.rp_id
     }
 
+    /// The configured origin.
     pub fn origin(&self) -> &str {
         &self.origin
     }
@@ -100,6 +112,11 @@ impl RelyingParty {
 /// Issue one per ceremony: send [`Challenge::to_base64url`] to the browser as
 /// the `challenge`, and keep [`Challenge::as_bytes`] server-side to pass as the
 /// `expected_challenge` when the response comes back.
+///
+/// passkeep does not store or track challenges; it only byte-compares the one
+/// you pass. You must associate the issued challenge with its pending ceremony,
+/// **invalidate it after a single verification** (and ideally expire it), or a
+/// captured response can be replayed.
 pub struct Challenge(Vec<u8>);
 
 impl Challenge {
@@ -110,14 +127,19 @@ impl Challenge {
         Ok(Self(buf.to_vec()))
     }
 
+    /// The raw 32 challenge bytes to keep server-side and pass back as the
+    /// `expected_challenge`.
     pub fn as_bytes(&self) -> &[u8] {
         &self.0
     }
 
+    /// The base64url (no padding) form to send to the browser as the ceremony
+    /// `challenge`.
     pub fn to_base64url(&self) -> String {
         URL_SAFE_NO_PAD.encode(&self.0)
     }
 
+    /// Consume the challenge, yielding its raw bytes (e.g. to store in a session).
     pub fn into_bytes(self) -> Vec<u8> {
         self.0
     }

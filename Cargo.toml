@@ -40,6 +40,8 @@ sha2 = { version = "0.11", optional = true }
 # active backend. sha2 is needed here regardless of which backend is selected.
 p256 = { version = "0.14", features = ["ecdsa"] }
 sha2 = "0.11"
+axum = "0.8"
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 
 [features]
 default = ["ring"]
