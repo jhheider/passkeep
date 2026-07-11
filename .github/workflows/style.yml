@@ -13,6 +13,5 @@ jobs:
   style:
     uses: jhheider/rust-ci/.github/workflows/style.yml@v1
     with:
-      runs-on: self-hosted
       # The verbatim license texts keep their exact bytes.
       skip-prefixes: "LICENSE"

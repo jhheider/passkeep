@@ -1,9 +1,10 @@
 name: CI
 
-# Thin caller over the shared regime; see jhheider/rust-ci. Private repo while
-# it is pre-publish, so everything routes to the self-hosted runner. The main
-# job builds and tests the default backend (ring); a second job exercises the
-# fully-pure-Rust `rustcrypto` backend, which the default build compiles out.
+# Thin caller over the shared regime; see jhheider/rust-ci. Public repo, so CI
+# runs on the full hosted matrix (never self-hosted: fork PRs would run
+# arbitrary code). The main job builds and tests the default backend (ring); a
+# second job exercises the fully-pure-Rust `rustcrypto` backend, which the
+# default build compiles out.
 on:
   push:
     branches: [main]
@@ -19,14 +20,12 @@ jobs:
   ci:
     uses: jhheider/rust-ci/.github/workflows/ci.yml@v1
     with:
-      os: '["self-hosted"]'
-      runs-on: self-hosted
       coverage: true
     secrets: inherit
 
   rustcrypto:
     name: RustCrypto backend
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - uses: jhheider/rust-ci/actions/setup-rust@v1
         with:

@@ -37,27 +37,26 @@ Their presence is a defect to fix, not a default to accept.
 
 ## The publish gate
 
-`publish = false` in Cargo.toml is intentional. Before the first crates.io
-release, two things must happen (they are the actual cost of this crate, per the
-brief): real Apple/Android known-answer test vectors, and a pass through the
-security-review skill over the hand-rolled parsing and verification. The current
-tests are self-consistency roundtrips, not spec KATs. Do not flip `publish` or
-tell anyone to depend on it until both are done.
+The repo is **public**, but `publish = false` in Cargo.toml is intentional: we
+are proving it out internally before the first crates.io release. Two brief
+items are already done (real Apple/Android known-answer vectors, and an
+adversarial security review of the parsing and verification, no exploitable
+issues found). Before flipping `publish` and cutting a release: run cargo-msrv
+for the real `rust-version`, add a `release.yml` rust-ci caller
+(publish-crates: true), bump the version off `-dev`, and only then tell anyone
+to depend on it.
 
-## CI and the runner
+## CI
 
-Thin callers over jhheider/rust-ci@v1 (ci.yml, style.yml, audit.yml). While the
-repo is **private** (pre-publish), jobs run on the self-hosted Mac Studio runner
-(`runs-on: self-hosted`), and there is a `passkeep` service in the `gha-runner`
-compose. The main CI job covers the default `ring` backend; a second job runs
-clippy + tests for the `rustcrypto` backend, which the default build compiles
-out.
+Public repo, so CI runs on the **hosted** rust-ci matrix (never self-hosted:
+fork PRs would run arbitrary code on the box). Thin callers over
+jhheider/rust-ci@v1 (ci.yml, style.yml, audit.yml). The main CI job covers the
+default `ring` backend; a second job runs clippy + tests for the `rustcrypto`
+backend, which the default build compiles out.
 
-**When it goes public** (at publish): this is a library, so hosted minutes are
-free and fork PRs become a code-execution risk. Revert workflows to
-`ubuntu-latest` / the full rust-ci matrix, remove the `passkeep` service from
-`gha-runner`, `just up`, `just clean-stale`. Then add a `release.yml` rust-ci
-caller (publish-crates: true) and flip `publish` in Cargo.toml.
+History: it was a private repo on the self-hosted Mac Studio runner during
+initial development; going public flipped the workflows to hosted and removed
+the `passkeep` service from `gha-runner`.
 
 ## House style
 
