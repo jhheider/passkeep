@@ -17,11 +17,16 @@ Changelog, and the project aims to follow Semantic Versioning once it hits 1.0.
 - Two build-time crypto backends: `ring` (default) and `rustcrypto` (p256 +
   sha2), both free of any C toolchain dependency.
 - `Challenge` helper for generating and encoding ceremony challenges.
-- Self-consistency roundtrip tests across both backends.
+- Self-consistency roundtrip tests plus rejection-path tests across both
+  backends.
+- Known-answer tests against real published WebAuthn vectors (registration
+  none + ES256 assertion, from duo-labs/py_webauthn, BSD-3-Clause), stored as
+  JSON fixtures under tests/vectors/ with PROVENANCE.md. ~91% line coverage.
 
 ### Not yet
 
-- Real Apple/Android known-answer test vectors (blocker for publish).
+- Real Apple/Android-captured known-answer vectors on top of the current
+  public ones (blocker for publish).
 - Security-review-skill pass over the parsing and verification (blocker for
   publish).
 - `packed` basic/full attestation (x5c certificate chain).

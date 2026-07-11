@@ -107,10 +107,13 @@ server-side store, credentials in Postgres) is a planned addition.
 
 ## Status
 
-Pre-1.0 and **not yet published**. The hand-rolled parsing and verification go
-through the security-review skill and real Apple/Android known-answer test
-vectors before the first crates.io release. Until then the current tests are
-self-consistency roundtrips, not spec KATs. Do not trust it in production yet.
+Pre-1.0 and **not yet published**. It is tested three ways: self-consistency
+roundtrips, parser rejection-path tests, and known-answer tests against real
+published WebAuthn vectors (`tests/vectors/`, ~91% line coverage), all run under
+both crypto backends. Before the first crates.io release it still needs
+Apple/Android-captured vectors on top of the public ones and a pass through the
+security-review skill over the hand-rolled parsing and verification. Do not trust
+it in production yet.
 
 ## License
 
