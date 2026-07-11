@@ -106,7 +106,7 @@ impl Challenge {
     /// 32 random bytes from the OS RNG.
     pub fn generate() -> Result<Self> {
         let mut buf = [0u8; 32];
-        getrandom::getrandom(&mut buf).map_err(|e| Error::Rng(e.to_string()))?;
+        getrandom::fill(&mut buf).map_err(|e| Error::Rng(e.to_string()))?;
         Ok(Self(buf.to_vec()))
     }
 

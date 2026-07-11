@@ -25,7 +25,7 @@ fn sha256(data: &[u8]) -> [u8; 32] {
 /// A deterministic simulated authenticator key plus its exported coordinates.
 fn test_key() -> (SigningKey, CoseEs256Key) {
     let signing_key = SigningKey::from_slice(&[0x11u8; 32]).expect("valid scalar");
-    let point = signing_key.verifying_key().to_encoded_point(false);
+    let point = signing_key.verifying_key().to_sec1_point(false);
     let xb: &[u8] = point.x().unwrap();
     let yb: &[u8] = point.y().unwrap();
     let x: [u8; 32] = xb.try_into().unwrap();
