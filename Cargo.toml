@@ -22,7 +22,7 @@ serde_json = "1"
 base64 = "0.22"
 thiserror = "2"
 # Challenge generation: OS RNG via syscalls, no C build.
-getrandom = "0.2"
+getrandom = "0.4"
 
 # Crypto backend, chosen at build time. `ring` is the default (Jacob's house
 # rule: rustls-with-ring over openssl/aws-lc; it ships prebuilt asm and
