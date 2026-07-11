@@ -1,0 +1,50 @@
+[package]
+name = "passkeep"
+version = "0.1.0-dev"
+edition = "2021"
+rust-version = "1.75"
+description = "A small, pure-Rust WebAuthn relying party: verify passkey registration and assertion ceremonies with no C crypto in the dependency tree."
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/jhheider/passkeep"
+homepage = "https://github.com/jhheider/passkeep"
+keywords = ["webauthn", "passkey", "fido2", "authentication", "relying-party"]
+categories = ["authentication", "cryptography"]
+# Not published yet: the hand-rolled parsing and verification go through the
+# security-review skill and real test vectors before the first crates.io release
+# (see the brief). Flip `publish` on then.
+publish = false
+
+[dependencies]
+# CBOR (attestationObject, COSE key) and JSON (clientDataJSON), both pure Rust.
+ciborium = "0.2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+base64 = "0.22"
+thiserror = "2"
+# Challenge generation: OS RNG via syscalls, no C build.
+getrandom = "0.2"
+
+# Crypto backend, chosen at build time. `ring` is the default (Jacob's house
+# rule: rustls-with-ring over openssl/aws-lc; it ships prebuilt asm and
+# cross-compiles clean to musl/aarch64 with no cmake/NASM). `rustcrypto` is the
+# fully-pure-Rust alternative (p256 + sha2) for those who want zero C anywhere.
+ring = { version = "0.17", optional = true }
+p256 = { version = "0.13", optional = true, default-features = false, features = [
+    "ecdsa",
+] }
+sha2 = { version = "0.10", optional = true }
+
+[dev-dependencies]
+# The roundtrip test simulates an authenticator: it mints a P-256 key and signs
+# with deterministic ECDSA (RFC 6979, so no RNG dep), then verifies through the
+# active backend. sha2 is needed here regardless of which backend is selected.
+p256 = { version = "0.13", features = ["ecdsa"] }
+sha2 = "0.10"
+
+[features]
+default = ["ring"]
+ring = ["dep:ring"]
+rustcrypto = ["dep:p256", "dep:sha2"]
+
+[profile.dev]
+debug = "line-tables-only"

@@ -1,0 +1,5 @@
+# Pins the toolchain for dev and the self-hosted CI runner so a local clippy can
+# never drift a minor behind CI. `stable` stays current via `rustup update`.
+[toolchain]
+channel = "stable"
+components = ["clippy", "rustfmt"]
