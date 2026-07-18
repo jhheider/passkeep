@@ -1,3 +1,5 @@
+set fallback
+
 # passkeep dev recipes. Local runs mirror CI (jhheider/rust-ci@v1 callers on the
 # self-hosted runner). The default backend is `ring`; the `-rustcrypto` recipes
 # exercise the fully-pure-Rust backend the default build compiles out.
