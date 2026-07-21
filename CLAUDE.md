@@ -63,8 +63,10 @@ the `passkeep` service from `gha-runner`.
 - Lean dependency trees. Small crates over kitchen-sink ones; no crate that
   shells out to cmake/NASM or drags a heavy `-sys` subtree.
 - Plain ASCII everywhere: no em-dash or en-dash in any file, comments and docs
-  included (the style.yml gate enforces it; license texts are skip-listed). Use
-  " - " or rephrase.
+  included (the style.yml gate enforces it; license texts are skip-listed).
+  Rephrase to avoid needing a dash (comma, colon, parenthetical, or separate
+  sentence) rather than swapping in a plain hyphen; a hyphen used as a dash
+  substitute still reads wrong, it just passes the gate.
 - `#![forbid(unsafe_code)]` in the crate. Do not add `-A` clippy escapes; fix
   the code.
 - Security-sensitive: every parsing/verification change wants a test, and the
