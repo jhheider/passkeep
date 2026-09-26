@@ -30,6 +30,11 @@ Changelog, and the project aims to follow Semantic Versioning once it hits 1.0.
   adversarial security review of the parsing and verification (no exploitable
   issues found).
 
+### Changed
+
+- Dependencies: base64 0.23.0 -> 0.23.1, thiserror 2.0.19 -> 2.0.20
+  (lockfile only).
+
 ### Not yet
 
 - Publication to crates.io (proving it out internally first).

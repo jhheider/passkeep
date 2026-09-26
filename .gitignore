@@ -1,3 +1,6 @@
 /target
 .DS_Store
 *.pem
+
+# Local Claude Code state (agent worktrees)
+/.claude/worktrees/
