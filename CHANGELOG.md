@@ -32,7 +32,7 @@ Changelog, and the project aims to follow Semantic Versioning once it hits 1.0.
 
 ### Changed
 
-- Dependencies: base64 0.23.0 -> 0.23.1, thiserror 2.0.19 -> 2.0.20
+- Dependencies: base64 0.23.0 -> 0.23.1, thiserror 2.0.19 -> 2.0.21
   (lockfile only).
 
 ### Not yet
